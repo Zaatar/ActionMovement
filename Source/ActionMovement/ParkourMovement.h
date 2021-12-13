@@ -31,6 +31,7 @@ private:
 	AActionMovementCharacter* PlayerCharacter;
 	UPROPERTY(VisibleAnywhere)
 	UCharacterMovementComponent* PlayerMovementComponent;
+
 	UPROPERTY(VisibleAnywhere)
 	float DefaultGravity = 0.0f;
 	UPROPERTY(EditDefaultsOnly)
@@ -47,6 +48,19 @@ private:
 	float MaxPerpendicularCheckRange = 0.52f;
 	UPROPERTY(EditAnywhere)
 	bool WallrunGravity = true;
+	UPROPERTY(EditAnywhere)
+	float WallrunTargetGravity = 0.25f;
+	UPROPERTY(EditAnywhere)
+	float SupressWallrunTimer = 1.0f;
+
+	UPROPERTY(VisibleAnywhere)
+	bool WallRunning = false;
+	UPROPERTY(VisibleAnywhere)
+	bool WallRunningRight = false;
+	UPROPERTY(VisibleAnywhere)
+	bool WallRunningLeft = false;
+	UPROPERTY(VisibleAnywhere)
+	bool WallrunSupressed = false;
 
 	FVector RightVector;
 	FVector ForwardVector;
@@ -54,8 +68,14 @@ private:
 	FVector RightRaycastLine;
 	FVector LeftRaycastLine;
 	FVector WallrunNormal;
+
+	FTimerHandle WallrunSuppressHandle;
 	
 	void CalculateRaycastLines();
-	void WallrunMovement();
+	bool WallrunMovement(bool bRightDirection);
 	bool IsPerpendicular(FVector Normal) const;
+	void InterpolateGravity();
+	void WallrunEnd();
+	void SuppressWallrun(float Delay);
+	void ResetWallrunSupress();
 };
