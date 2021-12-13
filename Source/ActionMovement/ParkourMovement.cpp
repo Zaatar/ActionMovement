@@ -1,10 +1,13 @@
 #include "ParkourMovement.h"
 #include "ActionMovementCharacter.h"
-#include "Engine/World.h"
+#include "Camera/CameraComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Engine/World.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Math/UnrealMathUtility.h"
 #include "TimerManager.h"
 
 
@@ -48,6 +51,12 @@ void UParkourMovement::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 		WallRunningLeft = false;
 		WallRunningRight = true;
 		InterpolateGravity();
+		CameraTilt();
+	}
+	else if (WallRunningRight)
+	{
+		WallrunEnd(SupressWallrunTimerDelay);
+		CameraTilt();
 	}
 	else if (WallrunMovement(false))
 	{
@@ -55,11 +64,12 @@ void UParkourMovement::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 		WallRunningLeft = true;
 		WallRunningRight = false;
 		InterpolateGravity();
+		CameraTilt();
 	}
 	else
 	{
-		WallrunEnd();
-		SuppressWallrun(SupressWallrunTimer);
+		WallrunEnd(SupressWallrunTimerDelay);
+		CameraTilt();
 	}
 }
 
@@ -98,7 +108,7 @@ bool UParkourMovement::WallrunMovement(bool bRightDirection)
 	}
 	bool bLineTrace = GetWorld()->LineTraceSingleByChannel(Hit, PlayerLocation, RayCastLine,
 		ECollisionChannel::ECC_Visibility, Params);
-	if (bLineTrace)
+	if (bLineTrace && !WallrunSupressed)
 	{
 		if (Hit.bBlockingHit && IsPerpendicular(Hit.Normal) && PlayerMovementComponent->IsFalling())
 		{
@@ -111,11 +121,8 @@ bool UParkourMovement::WallrunMovement(bool bRightDirection)
 
 			//TO BE REFACTORED INTO ITS' OWN FUNCTION
 			//Launch Player forward
-			FVector ForwardDirection = WallrunNormal.CrossProduct(WallrunNormal, { 0.0, 0.0, 1.0 });
+			FVector ForwardDirection = FVector::CrossProduct(WallrunNormal, { 0.0, 0.0, 1.0 });
 			ForwardDirection = ForwardDirection * WallrunSpeed * WallrunDirection;
-			UE_LOG(LogTemp, Warning, TEXT("Forward Direction Params: X: %f, Y: %f, Z: %f"), ForwardDirection.X,
-				ForwardDirection.Y, ForwardDirection.Z);
-			
 			PlayerCharacter->LaunchCharacter(ForwardDirection, true, WallrunGravity);
 			return true;
 		}
@@ -141,28 +148,76 @@ void UParkourMovement::InterpolateGravity()
 	float DeltaTime = UGameplayStatics::GetWorldDeltaSeconds(this);
 	float InterpolatedGravity = FMath::FInterpConstantTo(CurrentGravity, WallrunTargetGravity, DeltaTime, 10.0);
 	PlayerMovementComponent->GravityScale = InterpolatedGravity;
-	UE_LOG(LogTemp, Warning, TEXT("Logging Updates in Gravity: %f"), PlayerMovementComponent->GravityScale);
 }
 
-void UParkourMovement::WallrunEnd()
+void UParkourMovement::WallrunEnd(float WallrunAgainTimerDelay)
 {
-	WallRunning = false;
-	WallRunningLeft = false;
-	WallRunningRight = false;
-	PlayerMovementComponent->GravityScale = DefaultGravity;
+	if (WallRunning)
+	{
+		WallRunning = false;
+		WallRunningLeft = false;
+		WallRunningRight = false;
+		PlayerMovementComponent->GravityScale = DefaultGravity;
+		SuppressWallrun(WallrunAgainTimerDelay);
+	}
 }
 
 void UParkourMovement::SuppressWallrun(float Delay)
 {
 	WallrunSupressed = true;
-	UE_LOG(LogTemp, Error, TEXT("Wallrun Suppressed"));
 	PlayerCharacter->GetWorldTimerManager().SetTimer(WallrunSuppressHandle, this, &UParkourMovement::ResetWallrunSupress, 
-		SupressWallrunTimer, true);
+		SupressWallrunTimerDelay, true);
 }
 
 void UParkourMovement::ResetWallrunSupress()
 {
+	PlayerCharacter->GetWorldTimerManager().ClearTimer(WallrunSuppressHandle);
 	WallrunSupressed = false;
 	UE_LOG(LogTemp, Error, TEXT("Wallrun no longer suppressed"));
-	PlayerCharacter->GetWorldTimerManager().ClearTimer(WallrunSuppressHandle);
+}
+
+void UParkourMovement::InterpCamRotation(float RollValue)
+{
+	//Add null checks
+	UCameraComponent* PlayerSpringArm = PlayerCharacter->FindComponentByClass<UCameraComponent>();
+	if (PlayerSpringArm)
+	{
+		PlayerRotator = PlayerSpringArm->GetRelativeRotation();
+	}
+	FRotator TargetRotation = { RollValue, PlayerRotator.Pitch, PlayerRotator.Yaw };
+	float DeltaTime = UGameplayStatics::GetWorldDeltaSeconds(this);
+	FRotator InterpolatedRotation = FMath::RInterpTo(PlayerRotator, TargetRotation, DeltaTime, InterpolationSpeed);
+	PlayerSpringArm->SetRelativeRotation(InterpolatedRotation);
+	//PlayerCharacter->SetActorRotation(InterpolatedRotation);
+}
+
+void UParkourMovement::CameraTilt()
+{
+	if (WallRunningLeft)
+	{
+		//CameraXRoll = 15.0f;
+		InterpCamRotation(15.0f);
+	}
+	else if (WallRunningRight)
+	{
+		//CameraXRoll = -15.0f;
+		InterpCamRotation(-15.0f);
+	}
+	else
+	{
+		//CameraXRoll = 0.0f;
+		InterpCamRotation(0.0f);
+	}
+}
+
+void UParkourMovement::WallrunJump()
+{
+	if (WallRunning)
+	{
+		WallrunEnd(WallrunJumpTimerDelay);
+		FVector LaunchVector = { WallrunNormal.X * WallrunJumpOffForce, WallrunNormal.Y * WallrunJumpOffForce, 
+			WallrunJumpHeight };
+		PlayerCharacter->LaunchCharacter(LaunchVector, false, true);
+		UE_LOG(LogTemp, Error, TEXT("CHARACTER LAUNCHED WEEEEE!!!"));
+	}
 }

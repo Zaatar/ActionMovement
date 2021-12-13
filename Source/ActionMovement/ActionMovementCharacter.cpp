@@ -8,6 +8,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "ParkourMovement.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AActionMovementCharacter
@@ -136,5 +137,27 @@ void AActionMovementCharacter::MoveRight(float Value)
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 		// add movement in that direction
 		AddMovementInput(Direction, Value);
+	}
+}
+
+void AActionMovementCharacter::Jump()
+{
+	Super::Jump();
+
+	UParkourMovement* ParkourMovementComponent = FindComponentByClass<UParkourMovement>();
+	if (ParkourMovementComponent)
+	{
+		ParkourMovementComponent->WallrunJump();
+	}
+}
+
+void AActionMovementCharacter::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+	UParkourMovement* ParkourMovementComponent = FindComponentByClass<UParkourMovement>();
+	if (ParkourMovementComponent)
+	{
+		//TO BE REFACTORED
+		ParkourMovementComponent->WallrunEnd(1.0);
 	}
 }

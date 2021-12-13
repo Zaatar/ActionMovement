@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "ActionMovementCharacter.generated.h"
 
+//class UParkourMovement;
+
 UCLASS(config=Game)
 class AActionMovementCharacter : public ACharacter
 {
@@ -68,5 +70,11 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+private:
+	virtual void Jump() override;
+	virtual void Landed(const FHitResult& Hit) override;
+	//UPROPERTY(VisibleAnywhere)
+	//UParkourMovement* ParkourMovement;
 };
 
