@@ -158,6 +158,6 @@ void AActionMovementCharacter::Landed(const FHitResult& Hit)
 	if (ParkourMovementComponent)
 	{
 		//TO BE REFACTORED
-		ParkourMovementComponent->WallrunEnd(1.0);
+		ParkourMovementComponent->WallrunEnd(0.35);
 	}
 }

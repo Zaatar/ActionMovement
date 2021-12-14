@@ -176,19 +176,30 @@ void UParkourMovement::ResetWallrunSupress()
 	UE_LOG(LogTemp, Error, TEXT("Wallrun no longer suppressed"));
 }
 
-void UParkourMovement::InterpCamRotation(float RollValue)
+void UParkourMovement::InterpCamRotation(float RollValue, float YAxisOffset, float ZAxisOffset)
 {
+	FVector CameraOffset;
 	//Add null checks
-	UCameraComponent* PlayerSpringArm = PlayerCharacter->FindComponentByClass<UCameraComponent>();
+	USpringArmComponent* PlayerSpringArm = PlayerCharacter->FindComponentByClass<USpringArmComponent>();
+	UCameraComponent* PlayerCameraComponent = PlayerCharacter->FindComponentByClass<UCameraComponent>();
 	if (PlayerSpringArm)
 	{
-		PlayerRotator = PlayerSpringArm->GetRelativeRotation();
+		CameraOffset = PlayerSpringArm->GetTargetOffset();
+	}
+	if (PlayerCameraComponent)
+	{
+		PlayerRotator = PlayerCameraComponent->GetRelativeRotation();
 	}
 	FRotator TargetRotation = { RollValue, PlayerRotator.Pitch, PlayerRotator.Yaw };
 	float DeltaTime = UGameplayStatics::GetWorldDeltaSeconds(this);
 	FRotator InterpolatedRotation = FMath::RInterpTo(PlayerRotator, TargetRotation, DeltaTime, InterpolationSpeed);
-	PlayerSpringArm->SetRelativeRotation(InterpolatedRotation);
-	//PlayerCharacter->SetActorRotation(InterpolatedRotation);
+	CameraOffset.Y = FMath::FInterpConstantTo(CameraOffset.Y, YAxisOffset, DeltaTime, 10.0);
+	CameraOffset.Z = FMath::FInterpConstantTo(CameraOffset.Z, ZAxisOffset, DeltaTime, 10.0);
+	if (PlayerSpringArm && PlayerCameraComponent)
+	{
+		PlayerSpringArm->SetTargetOffset(CameraOffset);
+		PlayerCameraComponent->SetRelativeRotation(InterpolatedRotation);
+	}
 }
 
 void UParkourMovement::CameraTilt()
@@ -196,17 +207,17 @@ void UParkourMovement::CameraTilt()
 	if (WallRunningLeft)
 	{
 		//CameraXRoll = 15.0f;
-		InterpCamRotation(15.0f);
+		InterpCamRotation(15.0f, -150.0f, 0.0f);
 	}
 	else if (WallRunningRight)
 	{
 		//CameraXRoll = -15.0f;
-		InterpCamRotation(-15.0f);
+		InterpCamRotation(-15.0f, 150.0f, 100.0f);
 	}
 	else
 	{
 		//CameraXRoll = 0.0f;
-		InterpCamRotation(0.0f);
+		InterpCamRotation(0.0f, 0.0f, 0.0f);
 	}
 }
 

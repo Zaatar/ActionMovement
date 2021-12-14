@@ -51,7 +51,7 @@ private:
 	UPROPERTY(EditAnywhere)
 	bool WallrunGravity = true;
 	UPROPERTY(EditAnywhere)
-	float WallrunTargetGravity = 10.0f;
+	float WallrunTargetGravity = 2.0f;
 	UPROPERTY(EditAnywhere)
 	float SupressWallrunTimerDelay = 1.0f;
 	UPROPERTY(EditAnywhere)
@@ -92,6 +92,6 @@ private:
 	void InterpolateGravity();
 	void SuppressWallrun(float Delay);
 	void ResetWallrunSupress();
-	void InterpCamRotation(float CameraRoll);
+	void InterpCamRotation(float CameraRoll, float YAxisOffset,float ZAxisOffset);
 	void CameraTilt();
 };
