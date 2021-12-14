@@ -35,7 +35,6 @@ void UParkourMovement::BeginPlay()
 			DefaultGravity = PlayerMovementComponent->GravityScale;
 		}
 	}
-	
 }
 
 
@@ -180,6 +179,7 @@ void UParkourMovement::InterpCameraRotation(float RollValue)
 void UParkourMovement::CameraTilt()
 {
 	//TODO Parametrize these values and expose them in BP edits
+	//EDIT: Parametrizing these values will lead to complications in the TickComponent where we'd need to set values based on boolean flag, left it as is for now
 	if (WallRunningLeft)
 	{
 		//CameraXRoll = 15.0f;
