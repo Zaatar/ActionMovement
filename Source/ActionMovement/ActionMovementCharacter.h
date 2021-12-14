@@ -6,8 +6,6 @@
 #include "GameFramework/Character.h"
 #include "ActionMovementCharacter.generated.h"
 
-//class UParkourMovement;
-
 UCLASS(config=Game)
 class AActionMovementCharacter : public ACharacter
 {
@@ -74,7 +72,7 @@ public:
 private:
 	virtual void Jump() override;
 	virtual void Landed(const FHitResult& Hit) override;
-	//UPROPERTY(VisibleAnywhere)
-	//UParkourMovement* ParkourMovement;
+	//UPROPERTY(EditDefaultsOnly)
+	//class UParkourMovement* ParkourMovement;
 };
 

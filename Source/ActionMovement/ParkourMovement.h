@@ -77,8 +77,6 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Camera")
 	float InterpolationSpeed = 10.0f;;
 
-	FVector RightVector;
-	FVector ForwardVector;
 	FVector PlayerLocation;
 	FVector RightRaycastLine;
 	FVector LeftRaycastLine;
@@ -92,6 +90,9 @@ private:
 	void InterpolateGravity();
 	void SuppressWallrun(float Delay);
 	void ResetWallrunSupress();
-	void InterpCamRotation(float CameraRoll, float YAxisOffset,float ZAxisOffset);
+	void InterpCameraRotation(float CameraRoll);
 	void CameraTilt();
+	void LaunchPlayerIntoWall(FVector PlayerLocation, FVector WallNormal);
+	void LaunchPlayerForward(FVector WallNormal, float WallRunSpeed, float WallRunDirection, bool WallRunGravity);
+	void InterpCameraOffset(float YAxisOffset, float ZAxisOffset);
 };

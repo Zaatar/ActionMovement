@@ -19,7 +19,6 @@ UParkourMovement::UParkourMovement()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
 }
 
 
@@ -51,12 +50,10 @@ void UParkourMovement::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 		WallRunningLeft = false;
 		WallRunningRight = true;
 		InterpolateGravity();
-		CameraTilt();
 	}
 	else if (WallRunningRight)
 	{
 		WallrunEnd(SupressWallrunTimerDelay);
-		CameraTilt();
 	}
 	else if (WallrunMovement(false))
 	{
@@ -64,21 +61,20 @@ void UParkourMovement::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 		WallRunningLeft = true;
 		WallRunningRight = false;
 		InterpolateGravity();
-		CameraTilt();
 	}
 	else
 	{
 		WallrunEnd(SupressWallrunTimerDelay);
-		CameraTilt();
 	}
+	CameraTilt();
 }
 
 void UParkourMovement::CalculateRaycastLines()
 {
 	if (PlayerCharacter)
 	{
-		RightVector = PlayerCharacter->GetActorRightVector();
-		ForwardVector = PlayerCharacter->GetActorForwardVector();
+		FVector RightVector = PlayerCharacter->GetActorRightVector();
+		FVector ForwardVector = PlayerCharacter->GetActorForwardVector();
 		PlayerLocation = PlayerCharacter->GetActorLocation();
 		FVector RayCastEnd = RightVector * RayCastLength;
 		ForwardVector *= ForwardVectorBack;
@@ -106,24 +102,15 @@ bool UParkourMovement::WallrunMovement(bool bRightDirection)
 		RayCastLine = LeftRaycastLine;
 		WallrunDirection = 1.0f;
 	}
-	bool bLineTrace = GetWorld()->LineTraceSingleByChannel(Hit, PlayerLocation, RayCastLine,
+	bool bLineTrace = GetWorld()->LineTraceSingleByChannel(OUT Hit, PlayerLocation, RayCastLine,
 		ECollisionChannel::ECC_Visibility, Params);
 	if (bLineTrace && !WallrunSupressed)
 	{
 		if (Hit.bBlockingHit && IsPerpendicular(Hit.Normal) && PlayerMovementComponent->IsFalling())
 		{
 			WallrunNormal = Hit.Normal;
-			FVector DistanceToWall = WallrunNormal - PlayerLocation;
-			float DistanceToWallSize = DistanceToWall.Size();
-			FVector LaunchVector = Hit.Normal * DistanceToWallSize;
-			PlayerCharacter->LaunchCharacter(-LaunchVector, false, false);
-
-
-			//TO BE REFACTORED INTO ITS' OWN FUNCTION
-			//Launch Player forward
-			FVector ForwardDirection = FVector::CrossProduct(WallrunNormal, { 0.0, 0.0, 1.0 });
-			ForwardDirection = ForwardDirection * WallrunSpeed * WallrunDirection;
-			PlayerCharacter->LaunchCharacter(ForwardDirection, true, WallrunGravity);
+			LaunchPlayerIntoWall(PlayerLocation, WallrunNormal);
+			LaunchPlayerForward(WallrunNormal, WallrunSpeed, WallrunDirection, WallrunGravity);
 			return true;
 		}
 		DrawDebugLine(GetWorld(), PlayerLocation, RightRaycastLine, FColor::Red);
@@ -173,51 +160,43 @@ void UParkourMovement::ResetWallrunSupress()
 {
 	PlayerCharacter->GetWorldTimerManager().ClearTimer(WallrunSuppressHandle);
 	WallrunSupressed = false;
-	UE_LOG(LogTemp, Error, TEXT("Wallrun no longer suppressed"));
 }
 
-void UParkourMovement::InterpCamRotation(float RollValue, float YAxisOffset, float ZAxisOffset)
+void UParkourMovement::InterpCameraRotation(float RollValue)
 {
-	FVector CameraOffset;
-	//Add null checks
-	USpringArmComponent* PlayerSpringArm = PlayerCharacter->FindComponentByClass<USpringArmComponent>();
 	UCameraComponent* PlayerCameraComponent = PlayerCharacter->FindComponentByClass<UCameraComponent>();
-	if (PlayerSpringArm)
+	if (!PlayerCameraComponent)
 	{
-		CameraOffset = PlayerSpringArm->GetTargetOffset();
+		UE_LOG(LogTemp, Error, TEXT("The Player Camera Component is not initialized correclty!"));
+		return;
 	}
-	if (PlayerCameraComponent)
-	{
-		PlayerRotator = PlayerCameraComponent->GetRelativeRotation();
-	}
+	PlayerRotator = PlayerCameraComponent->GetRelativeRotation();
 	FRotator TargetRotation = { RollValue, PlayerRotator.Pitch, PlayerRotator.Yaw };
 	float DeltaTime = UGameplayStatics::GetWorldDeltaSeconds(this);
 	FRotator InterpolatedRotation = FMath::RInterpTo(PlayerRotator, TargetRotation, DeltaTime, InterpolationSpeed);
-	CameraOffset.Y = FMath::FInterpConstantTo(CameraOffset.Y, YAxisOffset, DeltaTime, 10.0);
-	CameraOffset.Z = FMath::FInterpConstantTo(CameraOffset.Z, ZAxisOffset, DeltaTime, 10.0);
-	if (PlayerSpringArm && PlayerCameraComponent)
-	{
-		PlayerSpringArm->SetTargetOffset(CameraOffset);
-		PlayerCameraComponent->SetRelativeRotation(InterpolatedRotation);
-	}
+	PlayerCameraComponent->SetRelativeRotation(InterpolatedRotation);
 }
 
 void UParkourMovement::CameraTilt()
 {
+	//TODO Parametrize these values and expose them in BP edits
 	if (WallRunningLeft)
 	{
 		//CameraXRoll = 15.0f;
-		InterpCamRotation(15.0f, -150.0f, 0.0f);
+		InterpCameraRotation(15.0f);
+		InterpCameraOffset(-150.0f, 0.0f);
 	}
 	else if (WallRunningRight)
 	{
 		//CameraXRoll = -15.0f;
-		InterpCamRotation(-15.0f, 150.0f, 100.0f);
+		InterpCameraRotation(-15.0f);
+		InterpCameraOffset(150.0f, 100.0f);
 	}
 	else
 	{
 		//CameraXRoll = 0.0f;
-		InterpCamRotation(0.0f, 0.0f, 0.0f);
+		InterpCameraRotation(0.0f);
+		InterpCameraOffset(0.0f, 0.0f);
 	}
 }
 
@@ -229,6 +208,57 @@ void UParkourMovement::WallrunJump()
 		FVector LaunchVector = { WallrunNormal.X * WallrunJumpOffForce, WallrunNormal.Y * WallrunJumpOffForce, 
 			WallrunJumpHeight };
 		PlayerCharacter->LaunchCharacter(LaunchVector, false, true);
-		UE_LOG(LogTemp, Error, TEXT("CHARACTER LAUNCHED WEEEEE!!!"));
 	}
+}
+
+/// <summary>
+/// This function gives the player character a feeling of "sticking to the wall" which is needed for wallrunning
+/// </summary>
+/// <param name="PlayerPosition">The location of the player character on which this component is placed</param>
+/// <param name="Hit">A hit occuring from a ray cast against a wall and matching the necessary conditions</param>
+void UParkourMovement::LaunchPlayerIntoWall(FVector PlayerPosition, FVector WallNormal)
+{
+	FVector DistanceToWall = WallrunNormal - PlayerLocation;
+	float DistanceToWallSize = DistanceToWall.Size();
+	FVector LaunchVector = WallNormal * DistanceToWallSize;
+	if (PlayerCharacter)
+	{
+		PlayerCharacter->LaunchCharacter(-LaunchVector, false, false);
+	}
+}
+
+/// <summary>
+/// This function launches the player forward while stuck to the wall from the previous function, thus mimicking movement
+/// while still running on the wall, hence, a wall run
+/// </summary>
+/// <param name="WallNormal">The normal of the wall being collided with, used here in a cross product with the Z axis unit
+/// vector to get the forward direction of the jump</param>
+/// <param name="WallRunSpeed">The speed at which the player is moving when wallrunning</param>
+/// <param name="WallRunDirection">The direction of the wall run, -1.0 for right direction wall runs, 1 for left direction</param>
+/// <param name="WallRunGravity">A boolean value that determines whether gravity should be ignored or not</param>
+
+void UParkourMovement::LaunchPlayerForward(FVector WallNormal, float WallRunSpeed, float WallRunDirection, bool WallRunGravity)
+{
+	FVector ForwardDirection = FVector::CrossProduct(WallNormal, { 0.0, 0.0, 1.0 });
+	ForwardDirection = ForwardDirection * WallRunSpeed * WallRunDirection;
+	if (PlayerCharacter)
+	{
+		PlayerCharacter->LaunchCharacter(ForwardDirection, true, WallRunGravity);
+	}
+}
+
+void UParkourMovement::InterpCameraOffset(float YAxisOffset, float ZAxisOffset)
+{
+	FVector CameraOffset;
+	USpringArmComponent* PlayerSpringArm = PlayerCharacter->FindComponentByClass<USpringArmComponent>();
+	if (!PlayerSpringArm)
+	{
+		UE_LOG(LogTemp, Error, TEXT("The Player Spring Arm Component is not initialized correctly!"));
+		return;
+	}
+	CameraOffset = PlayerSpringArm->GetTargetOffset();
+	float DeltaTime = UGameplayStatics::GetWorldDeltaSeconds(this);
+	CameraOffset.Y = FMath::FInterpConstantTo(CameraOffset.Y, YAxisOffset, DeltaTime, 10.0);
+	CameraOffset.Z = FMath::FInterpConstantTo(CameraOffset.Z, ZAxisOffset, DeltaTime, 10.0);
+	PlayerSpringArm->SetTargetOffset(CameraOffset);
 }
