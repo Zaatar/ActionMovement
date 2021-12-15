@@ -144,7 +144,7 @@ void UParkourMovement::WallrunEnd(float WallrunAgainTimerDelay)
 		WallRunningLeft = false;
 		WallRunningRight = false;
 		PlayerMovementComponent->GravityScale = DefaultGravity;
-		SuppressWallrun(WallrunAgainTimerDelay);
+		//SuppressWallrun(WallrunAgainTimerDelay);
 	}
 }
 
@@ -184,7 +184,7 @@ void UParkourMovement::CameraTilt()
 	{
 		//CameraXRoll = 15.0f;
 		InterpCameraRotation(15.0f);
-		InterpCameraOffset(-150.0f, 0.0f);
+		InterpCameraOffset(-150.0f, -100.0f);
 	}
 	else if (WallRunningRight)
 	{
