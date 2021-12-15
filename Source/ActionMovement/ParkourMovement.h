@@ -17,20 +17,31 @@ class ACTIONMOVEMENT_API UParkourMovement : public UActorComponent
 public:	
 	// Sets default values for this component's properties
 	UParkourMovement();
+	// Called every frame
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	void WallrunJump();
+	void WallrunEnd(float WallrunAgainTimerDelay);
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool WallRunning = false;
+	UFUNCTION(BlueprintPure)
+	bool GetIsWallrunning() const { return WallRunning; }
+	UFUNCTION(BlueprintPure)
+	bool GetIsWallrunningRight() const { return WallRunningRight; }
+	UFUNCTION(BlueprintPure)
+	bool GetIsWallrunningLeft() const { return WallRunningLeft; }
+
 
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 private:
 	UPROPERTY(VisibleAnywhere)
 	AActionMovementCharacter* PlayerCharacter;
 	UPROPERTY(VisibleAnywhere)
 	UCharacterMovementComponent* PlayerMovementComponent;
+	UPROPERTY(VisibleAnywhere)
+	FRotator PlayerRotator;
 
 	UPROPERTY(VisibleAnywhere)
 	float DefaultGravity = 0.0f;
@@ -49,12 +60,18 @@ private:
 	UPROPERTY(EditAnywhere)
 	bool WallrunGravity = true;
 	UPROPERTY(EditAnywhere)
-	float WallrunTargetGravity = 0.25f;
+	float WallrunTargetGravity = 2.0f;
 	UPROPERTY(EditAnywhere)
-	float SupressWallrunTimer = 1.0f;
+	float SupressWallrunTimerDelay = 1.0f;
+	UPROPERTY(EditAnywhere)
+	float WallrunJumpTimerDelay = 0.35f;
+	UPROPERTY(EditAnywhere)
+	float WallrunJumpHeight = 400.0f;
+	UPROPERTY(EditAnywhere)
+	float WallrunJumpOffForce = 800.0f;
 
 	UPROPERTY(VisibleAnywhere)
-	bool WallRunning = false;
+	bool OnWall = false;
 	UPROPERTY(VisibleAnywhere)
 	bool WallRunningRight = false;
 	UPROPERTY(VisibleAnywhere)
@@ -62,8 +79,11 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	bool WallrunSupressed = false;
 
-	FVector RightVector;
-	FVector ForwardVector;
+	/*UPROPERTY(EditDefaultsOnly, Category = "Camera")
+	float CameraXRoll;*/
+	UPROPERTY(EditDefaultsOnly, Category = "Camera")
+	float InterpolationSpeed = 10.0f;;
+
 	FVector PlayerLocation;
 	FVector RightRaycastLine;
 	FVector LeftRaycastLine;
@@ -75,7 +95,11 @@ private:
 	bool WallrunMovement(bool bRightDirection);
 	bool IsPerpendicular(FVector Normal) const;
 	void InterpolateGravity();
-	void WallrunEnd();
 	void SuppressWallrun(float Delay);
 	void ResetWallrunSupress();
+	void InterpCameraRotation(float CameraRoll);
+	void CameraTilt();
+	void LaunchPlayerIntoWall(FVector PlayerLocation, FVector WallNormal);
+	void LaunchPlayerForward(FVector WallNormal, float WallRunSpeed, float WallRunDirection, bool WallRunGravity);
+	void InterpCameraOffset(float YAxisOffset, float ZAxisOffset);
 };
