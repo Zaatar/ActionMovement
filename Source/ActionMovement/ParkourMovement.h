@@ -21,6 +21,15 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void WallrunJump();
 	void WallrunEnd(float WallrunAgainTimerDelay);
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool WallRunning = false;
+	UFUNCTION(BlueprintPure)
+	bool GetIsWallrunning() const { return WallRunning; }
+	UFUNCTION(BlueprintPure)
+	bool GetIsWallrunningRight() const { return WallRunningRight; }
+	UFUNCTION(BlueprintPure)
+	bool GetIsWallrunningLeft() const { return WallRunningLeft; }
+
 
 protected:
 	// Called when the game starts
@@ -63,8 +72,6 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	bool OnWall = false;
-	UPROPERTY(VisibleAnywhere)
-	bool WallRunning = false;
 	UPROPERTY(VisibleAnywhere)
 	bool WallRunningRight = false;
 	UPROPERTY(VisibleAnywhere)

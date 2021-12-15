@@ -20,7 +20,6 @@ class AActionMovementCharacter : public ACharacter
 	class UCameraComponent* FollowCamera;
 public:
 	AActionMovementCharacter();
-
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseTurnRate;
@@ -28,6 +27,15 @@ public:
 	/** Base look up/down rate, in deg/sec. Other scaling may affect final rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseLookUpRate;
+	UFUNCTION(BlueprintCallable, meta = (Tooltip = "Return our ParkourMovementComponent, if we have one."))
+	virtual UParkourMovement* GetParkourComponent() const;
+	UPROPERTY(BlueprintReadOnly)
+	bool IsWallRunning;
+	UPROPERTY(BlueprintReadOnly)
+	bool IsWallRunningLeft;
+	UPROPERTY(BlueprintReadOnly)
+	bool IsWallRunningRight;
+	virtual void Tick(float DeltaSeconds) override;
 
 protected:
 
@@ -72,7 +80,8 @@ public:
 private:
 	virtual void Jump() override;
 	virtual void Landed(const FHitResult& Hit) override;
-	//UPROPERTY(EditDefaultsOnly)
-	//class UParkourMovement* ParkourMovement;
+	void UpdateWallRunningVariables();
+	//UPROPERTY(VisibleAnywhere)
+	class UParkourMovement* ParkourMovementComponent;
 };
 
