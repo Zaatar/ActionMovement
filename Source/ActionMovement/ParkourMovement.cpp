@@ -43,6 +43,10 @@ void UParkourMovement::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	CalculateRaycastLines();
+	//VWRCalculateRaycastLines();
+	//VWRMovement(VWRLeftRaycast);
+	//VWRMovement(VWRMiddleRaycast);
+	//VWRMovement(VWRRightRaycast);
 	if (WallrunMovement(true))
 	{
 		WallRunning = true;
@@ -83,6 +87,41 @@ void UParkourMovement::CalculateRaycastLines()
 		RayCastEnd = RightVector * -RayCastLength;
 		LeftRaycastLine = PlayerLocation + RayCastEnd + ForwardVector;
 	}
+}
+
+void UParkourMovement::VWRCalculateRaycastLines()
+{
+	FVector RightVector = PlayerCharacter->GetActorRightVector();
+	FVector ForwardVector = PlayerCharacter->GetActorForwardVector();
+	PlayerLocation = PlayerCharacter->GetActorLocation();
+	FVector RayCastEnd = RightVector * 50.0f;
+	ForwardVector *= VWRVectorRange;
+	VWRRightRaycast = PlayerLocation + RayCastEnd + ForwardVector;
+	VWRMiddleRaycast = PlayerLocation + ForwardVector;
+	RayCastEnd = RightVector * -50.0f;
+	VWRLeftRaycast = PlayerLocation + RayCastEnd + ForwardVector;
+}
+
+bool UParkourMovement::VWRMovement(FVector RayCast)
+{
+	FHitResult Hit;
+	FVector RayCastLine;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(GetOwner());
+	bool bLineTrace = GetWorld()->LineTraceSingleByChannel(OUT Hit, PlayerLocation, RayCast, 
+		ECollisionChannel::ECC_Visibility, Params);
+	if (bLineTrace)
+	{
+		if (Hit.bBlockingHit && IsPerpendicular(Hit.Normal) && PlayerMovementComponent->IsFalling())
+		{
+			DrawDebugLine(GetWorld(), PlayerLocation, VWRRightRaycast, FColor::Red);
+			DrawDebugLine(GetWorld(), PlayerLocation, VWRMiddleRaycast, FColor::Yellow);
+			DrawDebugLine(GetWorld(), PlayerLocation, VWRLeftRaycast, FColor::Green);
+			WallrunNormal = Hit.Normal;
+			LaunchPlayerIntoWall(PlayerLocation, WallrunNormal);
+		}
+	}
+	return true;
 }
 
 bool UParkourMovement::WallrunMovement(bool bRightDirection)
