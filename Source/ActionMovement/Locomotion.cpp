@@ -47,12 +47,10 @@ void ULocomotion::TickComponent(float DeltaTime, ELevelTick TickType, FActorComp
 
 void ULocomotion::WallrunJump()
 {
-	UE_LOG(LogTemp, Warning, TEXT("JUMP"));
 	if (HorizontalWallRunning)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("JUMP"));
 		WallrunEnd(WallrunJumpTimerDelay);
-		FVector LaunchVector = { WallrunNormal.X * WallrunJumpOffForce, WallrunNormal.Y * WallrunJumpOffForce,
+		FVector LaunchVector = { Hit.Normal.X * WallrunJumpOffForce, Hit.Normal.Y * WallrunJumpOffForce,
 			WallrunJumpHeight };
 		PlayerCharacter->LaunchCharacter(LaunchVector, false, true);
 	}
@@ -68,11 +66,24 @@ void ULocomotion::WallrunEnd(float WallrunAgainTimerDelay)
 		PlayerMovementComponent->GravityScale = DefaultGravity;
 		//SuppressWallrun(WallrunAgainTimerDelay);
 	}
+	if (VerticalWallRunning)
+	{
+		VerticalWallRunning = false;
+		PlayerMovementComponent->GravityScale = DefaultGravity;
+		//SuppressWallrun(WallrunAgainTimerDelay);
+	}
 }
 
 void ULocomotion::Main()
 {
 	GetRaycastLines();
+	HorizontalWallrunMainLoop();
+	VerticalWallrunMainLoop();
+	CameraTilt();
+}
+
+void ULocomotion::HorizontalWallrunMainLoop()
+{
 	if (CheckCollision(true, RightRaycastLine))
 	{
 		HorizontalWallRunning = true;
@@ -97,34 +108,24 @@ void ULocomotion::Main()
 	{
 		WallrunEnd(SupressWallrunTimerDelay);
 	}
-	CameraTilt();
+}
 
-	//VWRMovement(VWRLeftRaycast, true);
-	//VWRMovement(VWRMiddleRaycast, true);
-	//VWRMovement(VWRRightRaycast, true);
-	/*if (WallrunMovement(true))
+void ULocomotion::VerticalWallrunMainLoop()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Hit.Location: X: %f, Y: %f, Z: %f"), Hit.Location.X, Hit.Location.Y, Hit.Location.Z);
+	UE_LOG(LogTemp, Warning, TEXT("Player Location: X: %f, Y: %f, Z: %f"), PlayerLocation.X, PlayerLocation.Y, PlayerLocation.Z);
+	if (CheckCollision(false, VWRMiddleRaycast))
 	{
-		WallRunning = true;
-		WallRunningLeft = false;
-		WallRunningRight = true;
+		VerticalWallRunning = true;
+		VerticalWallrun(Hit);
 		InterpolateGravity();
 	}
-	else if (WallRunningRight)
+	else if (CheckCollision(true, VWRMiddleRaycast))
 	{
-		WallrunEnd(SupressWallrunTimerDelay);
-	}
-	else if (WallrunMovement(false))
-	{
-		WallRunning = true;
-		WallRunningLeft = true;
-		WallRunningRight = false;
+		VerticalWallRunning = true;
+		VerticalWallrun(Hit);
 		InterpolateGravity();
 	}
-	else
-	{
-		WallrunEnd(SupressWallrunTimerDelay);
-	}
-	CameraTilt();*/
 }
 
 void ULocomotion::GetRaycastLines()

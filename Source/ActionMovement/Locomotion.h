@@ -53,9 +53,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float WallrunJumpTimerDelay = 0.35f;
 	UPROPERTY(EditAnywhere, Category = "Movement")
-	float WallrunJumpHeight = 400.0f;
+	float WallrunJumpHeight = 800.0f;
 	UPROPERTY(EditAnywhere, Category = "Movement")
-	float WallrunJumpOffForce = 800.0f;
+	float WallrunJumpOffForce = 1000.0f;
 	UPROPERTY(VisibleAnywhere, Category = "Movement")
 	float DefaultGravity = 0.0f;
 	UPROPERTY(VisibleAnywhere, Category = "Movement")
@@ -100,6 +100,8 @@ private:
 	float VWRVectorRange = 100.0f;
 
 	void Main();
+	void HorizontalWallrunMainLoop();
+	void VerticalWallrunMainLoop();
 	void GetRaycastLines();
 	void GetHorizontalWallRunRayCast(FVector ForwardVector, FVector RightVector);
 	void GetVerticalWallRunRayCast(FVector ForwardVector, FVector RightVector);
