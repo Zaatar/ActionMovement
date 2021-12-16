@@ -18,6 +18,9 @@ class AActionMovementCharacter : public ACharacter
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Locomotion, meta = (AllowPrivateAccess = "true"))
+	class ULocomotion* LocomotionComponent;
 public:
 	AActionMovementCharacter();
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */

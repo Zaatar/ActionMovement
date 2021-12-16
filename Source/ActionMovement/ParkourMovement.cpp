@@ -44,9 +44,9 @@ void UParkourMovement::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	CalculateRaycastLines();
 	VWRCalculateRaycastLines();
-	VWRMovement(VWRLeftRaycast);
-	VWRMovement(VWRMiddleRaycast);
-	VWRMovement(VWRRightRaycast);
+	VWRMovement(VWRLeftRaycast, true);
+	VWRMovement(VWRMiddleRaycast, true);
+	VWRMovement(VWRRightRaycast, true);
 	if (WallrunMovement(true))
 	{
 		WallRunning = true;
@@ -105,12 +105,22 @@ void UParkourMovement::VWRCalculateRaycastLines()
 	DrawDebugLine(GetWorld(), PlayerLocation, VWRLeftRaycast, FColor::Green);
 }
 
-bool UParkourMovement::VWRMovement(FVector RayCast)
+bool UParkourMovement::VWRMovement(FVector RayCast, bool bRightDirection)
 {
 	FHitResult Hit;
 	FVector RayCastLine;
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(GetOwner());
+	if (bRightDirection)
+	{
+		RayCastLine = RightRaycastLine;
+		WallrunDirection = -1.0f;
+	}
+	else
+	{
+		RayCastLine = LeftRaycastLine;
+		WallrunDirection = 1.0f;
+	}
 	bool bLineTrace = GetWorld()->LineTraceSingleByChannel(OUT Hit, PlayerLocation, RayCast, 
 		ECollisionChannel::ECC_Visibility, Params);
 	if (bLineTrace)
