@@ -111,4 +111,5 @@ private:
 
 	void VWRCalculateRaycastLines();
 	bool VWRMovement(FVector RayCast);
+	void LaunchPlayer(FVector WallNormal, FVector LaunchDirection, float WallRunSpeed, float WallRunDirection, bool WallRunGravity);
 };
