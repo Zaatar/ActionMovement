@@ -82,7 +82,7 @@ private:
 	/*UPROPERTY(EditDefaultsOnly, Category = "Camera")
 	float CameraXRoll;*/
 	UPROPERTY(EditDefaultsOnly, Category = "Camera")
-	float InterpolationSpeed = 10.0f;;
+	float InterpolationSpeed = 10.0f;
 
 	FVector PlayerLocation;
 	FVector RightRaycastLine;
@@ -90,6 +90,12 @@ private:
 	FVector WallrunNormal;
 
 	FTimerHandle WallrunSuppressHandle;
+
+	// Vertical Wall Run Variables
+	FVector VWRRightRaycast;
+	FVector VWRMiddleRaycast;
+	FVector VWRLeftRaycast;
+	float VWRVectorRange = 100.0f;
 	
 	void CalculateRaycastLines();
 	bool WallrunMovement(bool bRightDirection);
@@ -102,4 +108,8 @@ private:
 	void LaunchPlayerIntoWall(FVector PlayerLocation, FVector WallNormal);
 	void LaunchPlayerForward(FVector WallNormal, float WallRunSpeed, float WallRunDirection, bool WallRunGravity);
 	void InterpCameraOffset(float YAxisOffset, float ZAxisOffset);
+
+	void VWRCalculateRaycastLines();
+	bool VWRMovement(FVector RayCast, bool bRightDirection);
+	void LaunchPlayer(FVector WallNormal, FVector LaunchDirection, float WallRunSpeed, float WallRunDirection, bool WallRunGravity);
 };

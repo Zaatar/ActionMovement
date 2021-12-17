@@ -8,6 +8,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Locomotion.h"
 #include "ParkourMovement.h"
 
 //////////////////////////////////////////////////////////////////////////
@@ -43,6 +44,9 @@ AActionMovementCharacter::AActionMovementCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+
+	LocomotionComponent = CreateDefaultSubobject<ULocomotion>(TEXT("Locomotion"));
+	LocomotionComponent->SetupAttachment(RootComponent);
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
@@ -155,22 +159,35 @@ void AActionMovementCharacter::MoveRight(float Value)
 void AActionMovementCharacter::Jump()
 {
 	Super::Jump();
-	ParkourMovementComponent = FindComponentByClass<UParkourMovement>();
+	/*ParkourMovementComponent = FindComponentByClass<UParkourMovement>();
 	if (ParkourMovementComponent)
 	{
 		ParkourMovementComponent->WallrunJump();
+	}*/
+	if (!LocomotionComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("The Locomotion Component is not defined on the ActionMovementCharacter instance"));
+		return;
 	}
+	LocomotionComponent->WallrunJump();
+	
 }
 
 void AActionMovementCharacter::Landed(const FHitResult& Hit)
 {
 	Super::Landed(Hit);
-	ParkourMovementComponent = FindComponentByClass<UParkourMovement>();
-	if (ParkourMovementComponent)
+	//ParkourMovementComponent = FindComponentByClass<UParkourMovement>();
+	//if (ParkourMovementComponent)
+	//{
+	//	//TO BE REFACTORED
+	//	ParkourMovementComponent->WallrunEnd(0.35);
+	//}
+	if (!LocomotionComponent)
 	{
-		//TO BE REFACTORED
-		ParkourMovementComponent->WallrunEnd(0.35);
+		UE_LOG(LogTemp, Error, TEXT("The Locomotion Component is not defined on the ActionMovementCharacter instance"));
+		return;
 	}
+	LocomotionComponent->WallrunEnd(0.35);
 }
 
 void AActionMovementCharacter::UpdateWallRunningVariables()
