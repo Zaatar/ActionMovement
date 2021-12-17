@@ -49,6 +49,7 @@ void ULocomotion::WallrunJump()
 {
 	if (HorizontalWallRunning)
 	{
+		PlayerCharacter->LaunchCharacter(LaunchIntoWall, false, true);
 		WallrunEnd(WallrunJumpTimerDelay);
 		FVector LaunchVector = { Hit.Normal.X * WallrunJumpOffForce, Hit.Normal.Y * WallrunJumpOffForce,
 			WallrunJumpHeight };
@@ -78,8 +79,7 @@ void ULocomotion::Main()
 {
 	GetRaycastLines();
 	HorizontalWallrunMainLoop();
-	VerticalWallrunMainLoop();
-	CameraTilt();
+	//VerticalWallrunMainLoop();
 }
 
 void ULocomotion::HorizontalWallrunMainLoop()
@@ -108,12 +108,11 @@ void ULocomotion::HorizontalWallrunMainLoop()
 	{
 		WallrunEnd(SupressWallrunTimerDelay);
 	}
+	CameraTilt();
 }
 
 void ULocomotion::VerticalWallrunMainLoop()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Hit.Location: X: %f, Y: %f, Z: %f"), Hit.Location.X, Hit.Location.Y, Hit.Location.Z);
-	UE_LOG(LogTemp, Warning, TEXT("Player Location: X: %f, Y: %f, Z: %f"), PlayerLocation.X, PlayerLocation.Y, PlayerLocation.Z);
 	if (CheckCollision(false, VWRMiddleRaycast))
 	{
 		VerticalWallRunning = true;
@@ -211,10 +210,10 @@ void ULocomotion::LaunchPlayerIntoWall(FVector PlayerLocationVector, FVector Wal
 {
 	FVector DistanceToWall = WallrunNormal - PlayerLocationVector;
 	float DistanceToWallSize = DistanceToWall.Size();
-	FVector LaunchVector = WallNormal * DistanceToWallSize;
+	LaunchIntoWall = WallNormal * DistanceToWallSize;
 	if (PlayerCharacter)
 	{
-		PlayerCharacter->LaunchCharacter(-LaunchVector, false, false);
+		PlayerCharacter->LaunchCharacter(-LaunchIntoWall, false, false);
 	}
 }
 

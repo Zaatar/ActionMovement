@@ -90,6 +90,7 @@ private:
 	FVector LeftRaycastLine;
 	FVector WallrunNormal;
 	FHitResult Hit;
+	FVector LaunchIntoWall;
 
 	FTimerHandle WallrunSuppressHandle;
 
