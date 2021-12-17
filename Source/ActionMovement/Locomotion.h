@@ -118,9 +118,5 @@ private:
 	void CameraTilt();
 	void InterpCameraOffset(float YAxisOffset, float ZAxisOffset);
 	void InterpCameraRotation(float CameraRoll);
-	//void LaunchPlayerForward(FVector WallNormal, float WallRunSpeed, float WallRunDirection, bool WallRunGravity);
-
-	//void VWRCalculateRaycastLines();
-	//bool VWRMovement(FVector RayCast);
 	
 };
