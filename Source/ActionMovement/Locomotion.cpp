@@ -79,7 +79,7 @@ void ULocomotion::Main()
 {
 	GetRaycastLines();
 	HorizontalWallrunMainLoop();
-	//VerticalWallrunMainLoop();
+	VerticalWallrunMainLoop();
 }
 
 void ULocomotion::HorizontalWallrunMainLoop()
@@ -119,7 +119,7 @@ void ULocomotion::VerticalWallrunMainLoop()
 		VerticalWallrun(Hit);
 		InterpolateGravity();
 	}
-	else if (CheckCollision(true, VWRMiddleRaycast))
+	else if (CheckCollision(false, VWRMiddleRaycast))
 	{
 		VerticalWallRunning = true;
 		VerticalWallrun(Hit);
@@ -202,7 +202,9 @@ void ULocomotion::VerticalWallrun(const FHitResult HitResult)
 	if (HitResult.bBlockingHit && IsPerpendicular(HitResult.Normal) && PlayerMovementComponent->IsFalling())
 	{
 		LaunchPlayerIntoWall(PlayerLocation, HitResult.Normal);
-		LaunchPlayer(HitResult.Normal, FVector::XAxisVector, WallrunSpeed, WallrunDirection, true);
+		//UE_LOG(LogTemp, Error, TEXT("The Hit Result Normal is : X: %f, Y: %f, Z: %f"), HitResult.Normal.X, HitResult.Normal.Y, HitResult.Normal.Z);
+		//TODO: Think about refactoring this cuz you're passing the absolute value of the Y
+		LaunchPlayer(-FVector::YAxisVector, FVector::XAxisVector, WallrunSpeed, WallrunDirection, true);
 	}
 }
 
