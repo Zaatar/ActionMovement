@@ -6,6 +6,7 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "ActionMovementCameraSpringArm.h"
 #include "Kismet/GameplayStatics.h"
 
 
@@ -274,7 +275,7 @@ void ULocomotion::CameraTilt()
 
 void ULocomotion::InterpCameraOffset(float YAxisOffset, float ZAxisOffset)
 {
-	USpringArmComponent* PlayerSpringArm = PlayerCharacter->FindComponentByClass<USpringArmComponent>();
+	UActionMovementCameraSpringArm* PlayerSpringArm = PlayerCharacter->FindComponentByClass<UActionMovementCameraSpringArm>();
 	if (!PlayerSpringArm)
 	{
 		UE_LOG(LogTemp, Error, TEXT("The Player Spring Arm Component is not found by the Locomotion class!"));
