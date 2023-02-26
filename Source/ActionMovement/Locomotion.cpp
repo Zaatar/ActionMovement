@@ -58,6 +58,7 @@ void ULocomotion::WallrunJump()
 	}
 }
 
+// Function that is called on Wallrun End, resets boolean values to false and resets initial gravity value, also suppresses the player's ability to wallrun for a certain period of time.
 void ULocomotion::WallrunEnd(float WallrunAgainTimerDelay)
 {
 	if (HorizontalWallRunning)
@@ -76,6 +77,7 @@ void ULocomotion::WallrunEnd(float WallrunAgainTimerDelay)
 	}
 }
 
+// Main entry point for the ULocomotion class
 void ULocomotion::Main()
 {
 	GetRaycastLines();
@@ -83,6 +85,7 @@ void ULocomotion::Main()
 	//VerticalWallrunMainLoop();
 }
 
+// The main loop governing the Horizontal wall run mechanic
 void ULocomotion::HorizontalWallrunMainLoop()
 {
 	if (CheckCollision(true, RightRaycastLine))
@@ -112,6 +115,7 @@ void ULocomotion::HorizontalWallrunMainLoop()
 	CameraTilt();
 }
 
+// The main loop governing the Vertical wall run mechanic
 void ULocomotion::VerticalWallrunMainLoop()
 {
 	if (CheckCollision(false, VWRMiddleRaycast))
